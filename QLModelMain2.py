@@ -1,5 +1,5 @@
-import QLModle
-table = QLModle.QLM()
+import QLModle2
+table = QLModle2.QLM()
 
 
 # include BGLM
@@ -45,18 +45,18 @@ with open('doc_list.txt','r' ) as L:
   #          numpy.array([for word in result])
 
 #open collection and prepare to train
-with open('collection.txt','r' ) as f:
+with open('doc_list.txt','r' ) as f:
     print("collecting...")
-    Corpus = QLModle.Corpus()
+    Corpus = QLModle2.Corpus()
     count = 1
         #每篇doc的初始化材料
     for line in f.readlines() :
-        print("training corpus "+str(count))
+        #print("training corpus "+str(count))
         temp= []
         #    data=f.readline()
         line=line.strip('\n')
         temp = temp + line.split() # temp為切好的字的list
-        doc = QLModle.Document(temp)
+        doc = QLModle2.Document(temp)
         count = count +1 
         Corpus.add_document(doc)
         #print(self.trainedCorpus)
@@ -86,8 +86,7 @@ with open('query_list3.txt','r') as Q:
             for i in range(0,len(temp)-1,+1):
                 listOfWords.append(temp[i])
  
-           
-table.trainCorpus('collection.txt')
+
 
 
 """         

@@ -34,6 +34,7 @@ class Corpus():
     def add_document(self,document):
         self.documents.append(document)
     def build_vocabulary(self):
+        print("building vocabulary")
         discrete_set = set()
         for document in self.documents:
             for word in document.words:
@@ -48,13 +49,15 @@ class QLM:
         self.corpus_dict = {}
         self.trainedCorpus= {}
         self.sims = {}
-        self.n_d = 18461
+        self.n_d = 2265
         self.n_t = 3
         self.n_w = 51253
         self.a = 0.9
-        self.max_iter = 5 
+        self.max_iter = 2 
     def initialTrain(self, corpus):
             # bag of words
+            print("initial train parameters...")
+            print("bag of words...")
             self.n_w_d = np.zeros([self.n_d, self.n_w],dtype = np.int)
             for di, doc in enumerate(corpus.documents):
                 n_w_di = np.zeros([self.n_w],dtype = np.int)
@@ -63,8 +66,8 @@ class QLM:
                         word_index = corpus.vocabulary.index(word)
                         n_w_di[word_index]= n_w_di[word_index]+1
                 self.n_w_d[di]= n_w_di
-                
-                
+                print("processing :" + str(di))
+            print("P(z, w, d)")
             # P(z|w,d)
             self.p_z_dw = np.zeros([self.n_d, self.n_w, self.n_t], dtype = np.float)
     		# P(z|d)
@@ -97,6 +100,8 @@ class QLM:
         self.documents[doc_name]= doc_dict
         
     def train(self):
+        old_likelihood = 0.0
+        new_likelihood = 0.0
         print ("Training...")
         for i_iter in range(self.max_iter):
 
@@ -117,19 +122,20 @@ class QLM:
                         sum1 = 1
                     for zi in range(self.n_t):
                         self.p_z_dw[di, wi, zi] = sum_zk[zi] / sum1
+                print("processing :" + str(di))
             print ("M-Step...")
 			# update P(z|d)
-            for di in self.trainedCorpus:
+            for di in range(self.n_d):
                 for zi in range(self.n_t):
                     sum1 = 0.0
                     sum2 = 0.0
                     for wi in range(self.n_w):
-                        for word in range(self.n_t):
-                            sum1 = sum1 + self.n_w_d[di,wi] * self.p_z_dw[di, wi, zi]
-                            sum2 = sum2 + self.n_w_d[di,wi]
+                        sum1 = sum1 + self.n_w_d[di,wi] * self.p_z_dw[di, wi, zi]
+                        sum2 = sum2 + self.n_w_d[di,wi]
                     if sum2 == 0:
                         sum2 = 1
                     self.p_z_d[di, zi] = sum1 / sum2
+                print("M1 processing :" + str(di))
 
 			# update P(w|z)
             for zi in range(self.n_t):
@@ -142,8 +148,19 @@ class QLM:
                     sum1 = 1
                 for wi in range(self.n_w):
                     self.p_w_z[zi, wi] = sum2[wi] / sum1
-    
+                print("M2processing topic:" + str(zi))    
         print("train over")
+        
+        #calculate max likelihood
+        sum = 0.0
+        for wi in range(self.n_w):
+            for di in range(self.n_d):
+                for zi in range(self.n_t):
+                    sum = sum + self.p_w_z[zi, wi]*self.p_z_d[di, zi]
+
+                new_likelihood = self.n_w_d[di,wi]*math.log(sum)+ new_likelihood
+        print ("likelihood :　"+ str(new_likelihood) + " improved: " + str(new_likelihood - old_likelihood))
+        old_likelihood = new_likelihood
         
     def likelihood(self, list_of_words, queryName):
         """Returns a list of all the [docname, similarity_score] pairs relative to a
