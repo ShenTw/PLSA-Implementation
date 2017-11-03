@@ -79,7 +79,7 @@ with open('query_list3.txt','r') as Q:
             
             listOfWords = []
             temp = []
-            line = f.readline()
+            line = f.readline()#一行的短query
             line = line.strip('-1')
             temp = temp + line.split()
                 #不需要最後一個-1 所以只做到len -1
@@ -87,10 +87,10 @@ with open('query_list3.txt','r') as Q:
                 listOfWords.append(temp[i])
  
 
-
+        table.likelihood(listOfWords,line0)
 
 """         
-        #table.likelihood(listOfWords,line0)
+        
 with open('HW3_M10615103.txt','w') as W:
     W.write("Query,RetrievedDocuments")
     for query in table.sims:

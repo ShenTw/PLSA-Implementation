@@ -52,7 +52,9 @@ class QLM:
         self.n_d = 2265
         self.n_t = 3
         self.n_w = 51253
-        self.a = 0.9
+        self.a = 0.4
+        self.b = 0.3
+        self.PLSASum = 0.0
         self.max_iter = 2 
     def initialTrain(self, corpus):
             # bag of words
@@ -122,7 +124,7 @@ class QLM:
                         sum1 = 1
                     for zi in range(self.n_t):
                         self.p_z_dw[di, wi, zi] = sum_zk[zi] / sum1
-                print("processing :" + str(di))
+                #print("processing :" + str(di))
             print ("M-Step...")
 			# update P(z|d)
             for di in range(self.n_d):
@@ -135,7 +137,7 @@ class QLM:
                     if sum2 == 0:
                         sum2 = 1
                     self.p_z_d[di, zi] = sum1 / sum2
-                print("M1 processing :" + str(di))
+                #print("M1 processing :" + str(di))
 
 			# update P(w|z)
             for zi in range(self.n_t):
@@ -148,20 +150,20 @@ class QLM:
                     sum1 = 1
                 for wi in range(self.n_w):
                     self.p_w_z[zi, wi] = sum2[wi] / sum1
-                print("M2processing topic:" + str(zi))    
-        print("train over")
+                #print("M2processing topic:" + str(zi))    
+        
         
         #calculate max likelihood
-        sum = 0.0
-        for wi in range(self.n_w):
-            for di in range(self.n_d):
-                for zi in range(self.n_t):
-                    sum = sum + self.p_w_z[zi, wi]*self.p_z_d[di, zi]
-
-                new_likelihood = self.n_w_d[di,wi]*math.log(sum)+ new_likelihood
-        print ("likelihood :　"+ str(new_likelihood) + " improved: " + str(new_likelihood - old_likelihood))
-        old_likelihood = new_likelihood
-        
+            self.PLSASum = 0.0
+            for wi in range(self.n_w):
+                for di in range(self.n_d):
+                    for zi in range(self.n_t):
+                        self.PLSASum = self.PLSASum + self.p_w_z[zi, wi]*self.p_z_d[di, zi]
+    
+                    new_likelihood = self.n_w_d[di,wi]*math.log(self.PLSASum)+ new_likelihood
+            print ("likelihood :　"+ str(new_likelihood) + " improved: " + str(new_likelihood - old_likelihood))
+            old_likelihood = new_likelihood
+        print("train over")
     def likelihood(self, list_of_words, queryName):
         """Returns a list of all the [docname, similarity_score] pairs relative to a
 list of words.
@@ -194,7 +196,7 @@ list of words.
             #2.
             for w in query_dict:
                 if w in dicTemp:
-                        queryLikelihood = self.a*dicTemp[w] + (1-self.a)*float(self.corpus_dict[str(int(w))])+queryLikelihood
+                        queryLikelihood = math.log(self.a*dicTemp[w] +self.b*self.PLSASum + (1-self.a-self.b)*float(self.corpus_dict[str(int(w))]))+queryLikelihood
 
                     
             #3. with normalization
